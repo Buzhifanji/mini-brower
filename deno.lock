@@ -51,6 +51,8 @@
     "https://deno.land/x/cache@0.2.13/file_fetcher.ts": "5c793cc83a5b9377679ec313b2a2321e51bf7ed15380fa82d387f1cdef3b924f",
     "https://deno.land/x/cache@0.2.13/helpers.ts": "d1545d6432277b7a0b5ea254d1c51d572b6452a8eadd9faa7ad9c5586a1725c4",
     "https://deno.land/x/cache@0.2.13/mod.ts": "3188250d3a013ef6c9eb060e5284cf729083af7944a29e60bb3d8597dd20ebcd",
+    "https://deno.land/x/is_url@v1.0.1/isURL.ts": "26c7c013d843bf6c3b22dace7d9afc7c1604cfca611dded60b566c670bcc3019",
+    "https://deno.land/x/is_url@v1.0.1/mod.ts": "83693b1db6f71cc6a6147eb040a4b0226282da91720d252bfd68a9ebef0f8217",
     "https://deno.land/x/plug@0.5.2/deps.ts": "0f53866f60dc4f89bbc3be9d096f7501f2068a51923db220f43f0ad284b6b892",
     "https://deno.land/x/plug@0.5.2/plug.ts": "e495c772bc3b19eb30d820bb83f1b75f6047e3009e19d9a5d81dbe68ca642fd9",
     "https://deno.land/x/webview@0.7.5/deps.ts": "2852c4ad82c03d9ca96d23a9d2c932899e553069b201ba155b1b7eee7f097f49",

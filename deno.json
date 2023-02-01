@@ -1,6 +1,7 @@
 {
   "imports": {
-    "webview": "https://deno.land/x/webview@0.7.5/mod.ts"
+    "webview": "https://deno.land/x/webview@0.7.5/mod.ts",
+    "is_url": "https://deno.land/x/is_url@v1.0.1/mod.ts"
   },
   "tasks": {
     "start": "deno run -Ar --unstable main.ts"
