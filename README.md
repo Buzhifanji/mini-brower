@@ -4,6 +4,14 @@
 
 ## 开发环境
 
+安装依赖
+
 ```console
-deno task start
+pnpm i
+```
+
+项目启动
+
+```console
+pnpm dev
 ```
