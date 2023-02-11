@@ -10,16 +10,27 @@ btn.addEventListener("click", async (val) => {
   const url = input.value;
 
   const html = `
-  <div id="container">
-    <div class="box1">
-        <p>box1 box1 box1</p>
-        <p>box1 box1 box1</p>
-        <p>box1 box1 box1</p>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="container">
+      <div class="box1">
+          <p>box1 box1 box1</p>
+          <p>box1 box1 box1</p>
+          <p>box1 box1 box1</p>
+      </div>
+      <div class="box2">
+          <p>box2 box2 box2</p>
+      </div>
     </div>
-    <div class="box2">
-        <p>box2 box2 box2</p>
-    </div>
-  </div>
+  </body>
+  </html>
   `;
 
   console.log(parseHTML(html));

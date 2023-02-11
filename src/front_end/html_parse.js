@@ -8,7 +8,7 @@ const attributeReg =
   /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 属性
 
 const commentReg = /^<!\-\-[^(-->)]*\-\->/; // 注释标签
-const docTypeReg = /^<!doctype [^>]+>/; // doctype 标签
+const docTypeReg = /^<*(!doctype|!DOCTYPE) [^>]+>/; // doctype 标签
 
 /**
  * 利用正则去匹配标签，方便理解
@@ -136,13 +136,19 @@ export function parseHTML(str) {
   const stackIsEmpty = () => stack.length === 0;
 
   const parseOption = {
-    comment(token) {},
-    docType({ type, value }) {},
+    comment({ type, value }) {},
+    docType({ type, value }) {
+      curParent.children.push({
+        type,
+        value,
+      });
+    },
     text({ value }) {
       curParent.text = value;
     },
     startTag({ type, value, unary, attributes }) {
       const tag = {
+        type,
         tageName: value,
         attributes,
         text: "",
@@ -167,5 +173,5 @@ export function parseHTML(str) {
 
   parse(str, parseOption);
 
-  return ast.children[0];
+  return ast;
 }
