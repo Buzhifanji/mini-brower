@@ -1,7 +1,12 @@
-const startTagReg = /^<([a-zA-Z0-9\-]+)(?:([ ]+[a-zA-Z0-9\-]+=[^> ]+))*>/; //  开始标签, 以 < 开头
+import { isUnaryTag } from "./util.js";
+
+const startTagOpenReg = /^<([a-zA-Z0-9\-]+)(?:([ ]+[a-zA-Z0-9\-]+=[^> ]+))*>/; //  开始标签, 以 < 开头
+const startTagCloseReg = /^\s*(\/?)>/; // 开始标签 的结束位置， 以 > 或者 /> 结尾
+
 const endTagReg = /^<\/([a-zA-Z0-9\-]+)>/; // 结束标签, 以  </ 开头
 const attributeReg =
   /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 属性
+
 const commentReg = /^<!\-\-[^(-->)]*\-\->/; // 注释标签
 const docTypeReg = /^<!doctype [^>]+>/; // doctype 标签
 
@@ -14,79 +19,110 @@ function parse(html, options) {
     html = html.slice(num);
   }
 
+  function parseComment(match) {
+    options.comment({
+      type: "comment",
+      value: match[0],
+    });
+    advance(match[0].length);
+  }
+
+  function parseDocType(match) {
+    options.docType({
+      type: "doctype",
+      value: match[0],
+    });
+    advance(match[0].length);
+  }
+
+  function parseStartTag(match) {
+    const tagName = match[1];
+    const tag = {
+      type: "startTag",
+      value: tagName,
+      attributes: [],
+      unary: isUnaryTag(tagName) || false, // 表示标签是否自闭合
+    };
+
+    // <div id="container"> => id="container">
+    advance(match[1].length + 1);
+
+    // 匹配属性
+    let attributeMatch;
+    while ((attributeMatch = html.match(attributeReg))) {
+      const [name, attr] = attributeMatch[0].split("=");
+      const value = attr
+        ? attr.replace(/^['"]/, "").replace(/['"]$/, "")
+        : null;
+
+      tag.attributes.push({ name, value });
+
+      advance(attributeMatch[0].length);
+    }
+
+    const end = html.match(startTagCloseReg);
+    if (end) {
+      // 删除 最后的 > 获取 />
+      advance(end[0].length);
+    }
+
+    options.startTag(tag);
+  }
+
+  function parseEndTag(match) {
+    options.endTag({
+      type: "endTag",
+      value: match[1],
+    });
+    advance(match[0].length);
+  }
+
+  function parseText() {
+    let textEndIndex = html.indexOf("<");
+    options.text({
+      type: "text",
+      value: html.slice(0, textEndIndex),
+    });
+
+    if (textEndIndex === -1) {
+      textEndIndex = html.length;
+    }
+
+    advance(textEndIndex);
+  }
+
   while (html) {
     if (html.startsWith("<")) {
       // 匹配 <!-- （注释标签）
       const commentMatch = html.match(commentReg);
       if (commentMatch) {
-        options.comment({
-          type: "comment",
-          value: commentMatch[0],
-        });
-        advance(commentMatch[0].length);
+        parseComment(commentMatch);
         continue;
       }
 
       // 匹配 docType 标签
       const docTypeMatch = html.match(docTypeReg);
       if (docTypeMatch) {
-        options.docType({
-          type: "doctype",
-          value: docTypeMatch[0],
-        });
-        advance(docTypeMatch[0].length);
+        parseDocType(docTypeMatch);
         continue;
       }
 
       // 匹配 结束标签
       const endTagMatch = html.match(endTagReg);
       if (endTagMatch) {
-        options.endTag({
-          type: "endTag",
-          value: endTagMatch[1],
-        });
-        advance(endTagMatch[0].length);
+        parseEndTag(endTagMatch);
         continue;
       }
 
       // 匹配 开始标签
-      const startTagMatch = html.match(startTagReg);
+      const startTagMatch = html.match(startTagOpenReg);
       if (startTagMatch) {
-        options.startTag({
-          type: "startTag",
-          value: startTagMatch[1],
-        });
-
-        // <div id="container"> => id="container">
-        advance(startTagMatch[1].length + 1);
-
-        // 匹配属性
-        let attributeMatch;
-        while ((attributeMatch = html.match(attributeReg))) {
-          options.attribute({
-            type: "attribute",
-            value: attributeMatch[1],
-          });
-          advance(attributeMatch[0].length);
-        }
-
-        // 删除 最后 一个 >
-        advance(1);
+        parseStartTag(startTagMatch);
         continue;
       }
     } else {
       // 处理 text 文本
-      let textEndIndex = html.indexOf("<");
-      options.text({
-        type: "text",
-        value: html.slice(0, textEndIndex),
-      });
-
-      if (textEndIndex === -1) {
-        textEndIndex = html.length;
-      }
-
-      advance(textEndIndex);
+      parseText();
     }
   }
 }
@@ -96,7 +132,8 @@ export function parseHTML(str) {
     children: [],
   };
   let curParent = ast;
-  let prevParent = null;
+  const stack = [];
+  const stackIsEmpty = () => stack.length === 0;
 
   const parseOption = {
     comment(token) {},
@@ -104,27 +141,27 @@ export function parseHTML(str) {
     text({ value }) {
       curParent.text = value;
     },
-    startTag({ type, value }) {
-      console.log({ type, value });
+    startTag({ type, value, unary, attributes }) {
       const tag = {
         tageName: value,
-        attributes: [],
+        attributes,
         text: "",
         children: [],
       };
       curParent.children.push(tag);
-      prevParent = curParent;
-      curParent = tag;
+      if (!unary) {
+        // 不是 自闭合标签
+        curParent = tag;
+        stack.push(tag);
+      }
     },
     endTag({ type, value }) {
-      curParent = prevParent;
-    },
-    attribute({ type, value }) {
-      const [name, attr] = value.split("=");
-      curParent.attributes.push({
-        name,
-        value: value.replace(/^['"]/, "").replace(/['"]$/, ""),
-      });
+      if (stackIsEmpty()) return;
+      stack.pop();
+
+      if (!stackIsEmpty()) {
+        curParent = stack[stack.length - 1];
+      }
     },
   };
 
