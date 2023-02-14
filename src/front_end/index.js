@@ -20,6 +20,7 @@ btn.addEventListener("click", async (val) => {
   </head>
   <body>
     <div id="container">
+      <!-- <button>按钮</button> -->
       <div class="box1">
           <p>box1 box1 box1</p>
           <p>box1 box1 box1</p>

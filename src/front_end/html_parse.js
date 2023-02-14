@@ -7,7 +7,7 @@ const endTagReg = /^<\/([a-zA-Z0-9\-]+)>/; // 结束标签, 以  </ 开头
 const attributeReg =
   /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 属性
 
-const commentReg = /^<!\-\-[^(-->)]*\-\->/; // 注释标签
+const commentReg = /^<!\-\-(.*?)\-\->/; // 注释标签
 const docTypeReg = /^<*(!doctype|!DOCTYPE) [^>]+>/; // doctype 标签
 
 /**
@@ -22,7 +22,7 @@ function parse(html, options) {
   function parseComment(match) {
     options.comment({
       type: "comment",
-      value: match[0],
+      value: match[1],
     });
     advance(match[0].length);
   }
@@ -93,7 +93,7 @@ function parse(html, options) {
 
   while (html) {
     if (html.startsWith("<")) {
-      // 匹配 <!-- （注释标签）
+      // 匹配 <!-- --> （注释标签）
       const commentMatch = html.match(commentReg);
       if (commentMatch) {
         parseComment(commentMatch);
@@ -136,7 +136,12 @@ export function parseHTML(str) {
   const stackIsEmpty = () => stack.length === 0;
 
   const parseOption = {
-    comment({ type, value }) {},
+    comment({ type, value }) {
+      curParent.children.push({
+        type,
+        value,
+      });
+    },
     docType({ type, value }) {
       curParent.children.push({
         type,
